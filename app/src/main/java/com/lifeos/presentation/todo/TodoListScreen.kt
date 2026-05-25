@@ -1,5 +1,6 @@
 package com.lifeos.presentation.todo
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.lifeos.R
+import com.lifeos.core.util.DateTimeUtils
 import com.lifeos.domain.model.Todo
 
 private enum class TodoFilter { ALL, ACTIVE, COMPLETED }
@@ -101,20 +103,14 @@ fun TodoListRoute(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 actions = {
                     TextButton(onClick = { sortMenuExpanded = true }) { Text(stringResource(R.string.action_sort)) }
-                    DropdownMenu(expanded = sortMenuExpanded, onDismissRequest = { sortMenuExpanded = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.todo_sort_updated)) },
-                            onClick = { sortMenuExpanded = false; viewModel.setSort(TodoSort.UPDATED_DESC) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.todo_sort_due_date)) },
-                            onClick = { sortMenuExpanded = false; viewModel.setSort(TodoSort.DUE_ASC) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.todo_sort_priority)) },
-                            onClick = { sortMenuExpanded = false; viewModel.setSort(TodoSort.PRIORITY_DESC) }
-                        )
-                    }
+                    SortMenu(
+                        expanded = sortMenuExpanded,
+                        onDismiss = { sortMenuExpanded = false },
+                        sortKeys = state.sortKeys,
+                        onToggleField = viewModel::toggleSortField,
+                        onRemoveField = viewModel::removeSortField,
+                        onClear = viewModel::clearSort
+                    )
                 }
             )
         },
@@ -221,6 +217,74 @@ fun TodoListRoute(
 }
 
 @Composable
+private fun SortMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    sortKeys: List<TodoSortKey>,
+    onToggleField: (TodoSortField) -> Unit,
+    onRemoveField: (TodoSortField) -> Unit,
+    onClear: () -> Unit
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        SortMenuItem(
+            title = stringResource(R.string.todo_sort_due_date),
+            field = TodoSortField.DueDate,
+            sortKeys = sortKeys,
+            onToggleField = onToggleField,
+            onRemoveField = onRemoveField
+        )
+        SortMenuItem(
+            title = stringResource(R.string.todo_sort_priority),
+            field = TodoSortField.Priority,
+            sortKeys = sortKeys,
+            onToggleField = onToggleField,
+            onRemoveField = onRemoveField
+        )
+        SortMenuItem(
+            title = stringResource(R.string.todo_sort_updated),
+            field = TodoSortField.Updated,
+            sortKeys = sortKeys,
+            onToggleField = onToggleField,
+            onRemoveField = onRemoveField
+        )
+
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.action_clear)) },
+            onClick = {
+                onClear()
+                onDismiss()
+            }
+        )
+    }
+}
+
+@Composable
+private fun SortMenuItem(
+    title: String,
+    field: TodoSortField,
+    sortKeys: List<TodoSortKey>,
+    onToggleField: (TodoSortField) -> Unit,
+    onRemoveField: (TodoSortField) -> Unit
+) {
+    val index = sortKeys.indexOfFirst { it.field == field }
+    val order = if (index >= 0) "${index + 1}" else null
+    val dir = sortKeys.getOrNull(index)?.direction
+
+    val suffix = when {
+        order == null -> ""
+        dir == SortDirection.ASC -> "  $order ↑"
+        else -> "  $order ↓"
+    }
+
+    DropdownMenuItem(
+        text = { Text(title + suffix) },
+        onClick = { onToggleField(field) }
+    )
+
+    // long-press to remove from the chain (otherwise click toggles direction)
+}
+
+@Composable
 private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
     AssistChip(
         onClick = onClick,
@@ -285,6 +349,10 @@ private fun TodoRow(
                 .weight(1f)
                 .padding(horizontal = 8.dp)
                 .alpha(completedAlpha)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onDelete
+                )
         ) {
             Text(
                 todo.title,
@@ -292,22 +360,25 @@ private fun TodoRow(
                 overflow = TextOverflow.Ellipsis,
                 textDecoration = completedStyle
             )
+
             val subtitle = buildString {
                 append(todo.priority.name)
+                todo.dueDate?.let {
+                    append(" • ")
+                    append(stringResource(R.string.todo_due_prefix, DateTimeUtils.formatDate(it)))
+                }
                 if (!todo.description.isNullOrBlank()) {
                     append(" • ")
                     append(todo.description)
                 }
             }
+
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-        }
-        IconButton(onClick = onClick) {
-            Text(stringResource(R.string.action_edit))
         }
         IconButton(onClick = onDelete) {
             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))

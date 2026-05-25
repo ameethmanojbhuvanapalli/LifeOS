@@ -2,6 +2,7 @@ package com.lifeos.presentation.todo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lifeos.domain.model.Priority
 import com.lifeos.domain.model.Todo
 import com.lifeos.domain.usecase.todo.DeleteTodoUseCase
 import com.lifeos.domain.usecase.todo.GetTodosUseCase
@@ -33,48 +34,117 @@ class TodoListViewModel @Inject constructor(
         sync()
     }
 
-    fun setSort(sort: TodoSort) {
-        _uiState.update { it.copy(sort = sort) }
+    fun toggleSortField(field: TodoSortField) {
+        _uiState.update { state ->
+            val existingIndex = state.sortKeys.indexOfFirst { it.field == field }
+
+            val newKeys = when {
+                existingIndex == -1 -> {
+                    // Add with default direction.
+                    state.sortKeys + defaultKeyFor(field)
+                }
+
+                else -> {
+                    // Toggle direction for this key.
+                    state.sortKeys.mapIndexed { idx, key ->
+                        if (idx != existingIndex) key
+                        else key.copy(direction = key.direction.flip())
+                    }
+                }
+            }.normalizeDefault()
+
+            state.copy(sortKeys = newKeys)
+        }
+    }
+
+    fun removeSortField(field: TodoSortField) {
+        _uiState.update { state ->
+            state.copy(sortKeys = state.sortKeys.filterNot { it.field == field }.normalizeDefault())
+        }
+    }
+
+    fun clearSort() {
+        _uiState.update { it.copy(sortKeys = listOf(TodoSortKey.Updated)) }
     }
 
     fun toggle(todo: Todo) {
-        viewModelScope.launch {
-            toggleTodoUseCase(todo)
-        }
+        viewModelScope.launch { toggleTodoUseCase(todo) }
     }
 
     fun delete(todo: Todo) {
-        viewModelScope.launch {
-            deleteTodoUseCase(todo.id)
-        }
+        viewModelScope.launch { deleteTodoUseCase(todo.id) }
     }
 
     fun sync() {
-        viewModelScope.launch {
-            runCatching { syncTodosUseCase() }
-        }
+        viewModelScope.launch { runCatching { syncTodosUseCase() } }
     }
 
     private fun observeTodos() {
         viewModelScope.launch {
             getTodosUseCase()
                 .catch { e ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Unknown error") }
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = e.message ?: "Unknown error")
+                    }
                 }
                 .collectLatest { list ->
                     _uiState.update { state ->
-                        val sorted = sortTodos(list, state.sort)
+                        val sorted = sortTodos(list, state.sortKeys)
                         state.copy(isLoading = false, todos = sorted, errorMessage = null)
                     }
                 }
         }
     }
 
-    private fun sortTodos(list: List<Todo>, sort: TodoSort): List<Todo> {
-        return when (sort) {
-            TodoSort.UPDATED_DESC -> list.sortedByDescending { it.updatedAt }
-            TodoSort.DUE_ASC -> list.sortedWith(compareBy(nullsLast()) { it.dueDate })
-            TodoSort.PRIORITY_DESC -> list.sortedByDescending { it.priority.ordinal }
+    private fun sortTodos(list: List<Todo>, keys: List<TodoSortKey>): List<Todo> {
+        // Always apply stable tie-breaker at end.
+        val effectiveKeys = (keys.normalizeDefault() + TodoSortKey.Updated)
+            .distinctBy { it.field }
+
+        val comparator = effectiveKeys
+            .map { key -> comparatorFor(key) }
+            .reduce { acc, next -> acc.then(next) }
+
+        return list.sortedWith(comparator)
+    }
+
+    private fun comparatorFor(key: TodoSortKey): Comparator<Todo> {
+        return when (key.field) {
+            TodoSortField.Updated -> compareBy<Todo>(nullsLast()) { it.updatedAt }
+                .withDirection(key.direction)
+
+            TodoSortField.DueDate -> compareBy<Todo>(nullsLast()) { it.dueDate }
+                .withDirection(key.direction)
+
+            TodoSortField.Priority -> compareBy<Todo> { priorityRank(it.priority) }
+                .withDirection(key.direction)
         }
     }
+
+    private fun priorityRank(priority: Priority): Int {
+        // Explicit ranks (avoid fragile ordinal).
+        return when (priority) {
+            Priority.HIGH -> 3
+            Priority.MEDIUM -> 2
+            Priority.LOW -> 1
+        }
+    }
+
+    private fun defaultKeyFor(field: TodoSortField): TodoSortKey {
+        return when (field) {
+            TodoSortField.Updated -> TodoSortKey.Updated
+            TodoSortField.DueDate -> TodoSortKey.DueDate
+            TodoSortField.Priority -> TodoSortKey.Priority
+        }
+    }
+}
+
+private fun SortDirection.flip(): SortDirection = if (this == SortDirection.ASC) SortDirection.DESC else SortDirection.ASC
+
+private fun List<TodoSortKey>.normalizeDefault(): List<TodoSortKey> {
+    return if (isEmpty()) listOf(TodoSortKey.Updated) else this
+}
+
+private fun <T> Comparator<T>.withDirection(direction: SortDirection): Comparator<T> {
+    return if (direction == SortDirection.ASC) this else this.reversed()
 }

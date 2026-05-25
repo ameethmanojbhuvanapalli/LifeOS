@@ -39,17 +39,9 @@ class TodoListViewModel @Inject constructor(
             val existingIndex = state.sortKeys.indexOfFirst { it.field == field }
 
             val newKeys = when {
-                existingIndex == -1 -> {
-                    // Add with default direction.
-                    state.sortKeys + defaultKeyFor(field)
-                }
-
-                else -> {
-                    // Toggle direction for this key.
-                    state.sortKeys.mapIndexed { idx, key ->
-                        if (idx != existingIndex) key
-                        else key.copy(direction = key.direction.flip())
-                    }
+                existingIndex == -1 -> state.sortKeys + defaultKeyFor(field)
+                else -> state.sortKeys.mapIndexed { idx, key ->
+                    if (idx != existingIndex) key else key.copy(direction = key.direction.flip())
                 }
             }.normalizeDefault()
 
@@ -97,29 +89,28 @@ class TodoListViewModel @Inject constructor(
     }
 
     private fun sortTodos(list: List<Todo>, keys: List<TodoSortKey>): List<Todo> {
-        // Always apply stable tie-breaker at end.
         val effectiveKeys = (keys.normalizeDefault() + TodoSortKey.Updated)
             .distinctBy { it.field }
 
         val comparator = effectiveKeys
             .asSequence()
-            .map { key -> comparatorFor(key) }
+            .map(::comparatorFor)
             .reduce { acc, next -> acc.then(next) }
 
         return list.sortedWith(comparator)
     }
 
     private fun comparatorFor(key: TodoSortKey): Comparator<Todo> {
-        return when (key.field) {
-            TodoSortField.Updated -> compareBy<Todo, Long> { it.updatedAt }
-                .withDirection(key.direction)
-
-            TodoSortField.DueDate -> compareBy<Todo, Long?>(nullsLast()) { it.dueDate }
-                .withDirection(key.direction)
-
-            TodoSortField.Priority -> compareBy<Todo, Int> { priorityRank(it.priority) }
-                .withDirection(key.direction)
+        val base: Comparator<Todo> = when (key.field) {
+            TodoSortField.Updated -> Comparator.comparingLong(Todo::updatedAt)
+            TodoSortField.DueDate -> Comparator.comparing(
+                { t: Todo -> t.dueDate },
+                nullsLast(naturalOrder<Long>())
+            )
+            TodoSortField.Priority -> Comparator.comparingInt { t: Todo -> priorityRank(t.priority) }
         }
+
+        return if (key.direction == SortDirection.ASC) base else base.reversed()
     }
 
     private fun priorityRank(priority: Priority): Int {
@@ -144,8 +135,4 @@ private fun SortDirection.flip(): SortDirection = if (this == SortDirection.ASC)
 
 private fun List<TodoSortKey>.normalizeDefault(): List<TodoSortKey> {
     return if (isEmpty()) listOf(TodoSortKey.Updated) else this
-}
-
-private fun <T> Comparator<T>.withDirection(direction: SortDirection): Comparator<T> {
-    return if (direction == SortDirection.ASC) this else this.reversed()
 }

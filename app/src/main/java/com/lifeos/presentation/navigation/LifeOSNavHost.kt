@@ -2,6 +2,8 @@ package com.lifeos.presentation.navigation
 
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.padding
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,25 +13,31 @@ import com.lifeos.core.navigation.NavDestinations
 import com.lifeos.presentation.screens.DashboardScreen
 import com.lifeos.presentation.todo.AddEditTodoRoute
 import com.lifeos.presentation.todo.TodoListRoute
-import androidx.compose.foundation.layout.padding
 
 @Composable
 fun LifeOSNavHost() {
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState().value
-    val currentRoute = backStackEntry?.destination?.route
+    val currentDestination = backStackEntry?.destination
+    val currentRoute = currentDestination?.route
+
+    val bottomBarVisible = currentRoute != "todo/add" && currentRoute != "todo/edit?todoId={todoId}"
 
     Scaffold(
         bottomBar = {
-            // hide on add/edit screen
-            if (currentRoute != "todo/edit?todoId={todoId}" && currentRoute != "todo/add") {
-                LifeOSBottomBar(currentRoute = currentRoute) { route ->
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+            if (bottomBarVisible) {
+                LifeOSBottomBar(
+                    selectedRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
+                )
             }
         }
     ) { padding ->

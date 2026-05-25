@@ -17,14 +17,14 @@ sealed class BottomNavItem(val route: String, val label: String, val icon: Image
 
 @Composable
 fun LifeOSBottomBar(
-    currentRoute: String?,
+    selectedRoute: String?,
     onNavigate: (String) -> Unit
 ) {
     val items = listOf(BottomNavItem.Dashboard, BottomNavItem.Todos)
 
     NavigationBar {
         items.forEach { item ->
-            val selected = currentRoute == item.route
+            val selected = selectedRoute == item.route
             NavigationBarItem(
                 selected = selected,
                 onClick = { onNavigate(item.route) },

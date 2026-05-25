@@ -19,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.lifeos.R
 import com.lifeos.core.util.DateTimeUtils
 import com.lifeos.domain.model.Priority
 import java.time.LocalDate
@@ -41,8 +43,16 @@ fun AddEditTodoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (state.isEdit) "Edit Todo" else "Add Todo") },
-                navigationIcon = { TextButton(onClick = onBack) { Text("Back") } }
+                title = {
+                    Text(
+                        stringResource(
+                            if (state.isEdit) R.string.title_edit_todo else R.string.title_add_todo
+                        )
+                    )
+                },
+                navigationIcon = {
+                    TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
+                }
             )
         }
     ) { padding ->
@@ -55,7 +65,7 @@ fun AddEditTodoScreen(
                 value = state.title,
                 onValueChange = onTitleChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Title*") },
+                label = { Text(stringResource(R.string.todo_title_label)) },
                 singleLine = true,
                 enabled = !state.isSaving
             )
@@ -66,7 +76,7 @@ fun AddEditTodoScreen(
                 value = state.description,
                 onValueChange = onDescriptionChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.todo_description_label)) },
                 enabled = !state.isSaving
             )
 
@@ -91,7 +101,7 @@ fun AddEditTodoScreen(
                     onCheckedChange = onCompletedChange,
                     enabled = !state.isSaving
                 )
-                Text("Completed")
+                Text(stringResource(R.string.todo_completed_label))
             }
 
             if (state.errorMessage != null) {
@@ -106,7 +116,11 @@ fun AddEditTodoScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isSaving
             ) {
-                Text(if (state.isSaving) "Saving..." else "Save")
+                Text(
+                    stringResource(
+                        if (state.isSaving) R.string.action_saving else R.string.action_save
+                    )
+                )
             }
         }
     }
@@ -115,7 +129,7 @@ fun AddEditTodoScreen(
 @Composable
 private fun PriorityPicker(priority: Priority, onPriority: (Priority) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Priority:")
+        Text(stringResource(R.string.todo_priority_label))
         Spacer(Modifier.padding(6.dp))
         Priority.values().forEach { p ->
             TextButton(onClick = { onPriority(p) }) {
@@ -134,7 +148,9 @@ private fun DueDatePicker(
     onClear: () -> Unit
 ) {
     val context = LocalContext.current
-    val label = dueDateMillis?.let { "Due: ${DateTimeUtils.formatDate(it)}" } ?: "No due date"
+    val label = dueDateMillis?.let {
+        stringResource(R.string.todo_due_prefix, DateTimeUtils.formatDate(it))
+    } ?: stringResource(R.string.todo_due_none)
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(label)
@@ -156,9 +172,9 @@ private fun DueDatePicker(
                 )
                 dialog.show()
             }
-        ) { Text("Pick") }
+        ) { Text(stringResource(R.string.action_pick)) }
         if (dueDateMillis != null) {
-            TextButton(enabled = enabled, onClick = onClear) { Text("Clear") }
+            TextButton(enabled = enabled, onClick = onClear) { Text(stringResource(R.string.action_clear)) }
         }
     }
 }

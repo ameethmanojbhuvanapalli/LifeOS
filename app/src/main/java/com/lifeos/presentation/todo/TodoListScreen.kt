@@ -20,7 +20,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.lifeos.R
 import com.lifeos.domain.model.Todo
 
 private enum class TodoFilter { ALL, ACTIVE, COMPLETED }
@@ -73,8 +74,8 @@ fun TodoListRoute(
     if (deleteTarget != null) {
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title = { Text("Delete todo?") },
-            text = { Text("This action cannot be undone.") },
+            title = { Text(stringResource(R.string.todo_delete_dialog_title)) },
+            text = { Text(stringResource(R.string.todo_delete_dialog_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -82,10 +83,10 @@ fun TodoListRoute(
                         deleteTarget = null
                         if (t != null) viewModel.delete(t)
                     }
-                ) { Text("Delete") }
+                ) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+                TextButton(onClick = { deleteTarget = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -96,21 +97,21 @@ fun TodoListRoute(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Todos") },
+                title = { Text(stringResource(R.string.title_todos)) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 actions = {
-                    TextButton(onClick = { sortMenuExpanded = true }) { Text("Sort") }
+                    TextButton(onClick = { sortMenuExpanded = true }) { Text(stringResource(R.string.action_sort)) }
                     DropdownMenu(expanded = sortMenuExpanded, onDismissRequest = { sortMenuExpanded = false }) {
                         DropdownMenuItem(
-                            text = { Text("Updated") },
+                            text = { Text(stringResource(R.string.todo_sort_updated)) },
                             onClick = { sortMenuExpanded = false; viewModel.setSort(TodoSort.UPDATED_DESC) }
                         )
                         DropdownMenuItem(
-                            text = { Text("Due date") },
+                            text = { Text(stringResource(R.string.todo_sort_due_date)) },
                             onClick = { sortMenuExpanded = false; viewModel.setSort(TodoSort.DUE_ASC) }
                         )
                         DropdownMenuItem(
-                            text = { Text("Priority") },
+                            text = { Text(stringResource(R.string.todo_sort_priority)) },
                             onClick = { sortMenuExpanded = false; viewModel.setSort(TodoSort.PRIORITY_DESC) }
                         )
                     }
@@ -120,7 +121,7 @@ fun TodoListRoute(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_add))
             }
         }
     ) { padding ->
@@ -133,8 +134,8 @@ fun TodoListRoute(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("No todos yet")
-                Text("Tap + to add your first task", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.todo_empty_title))
+                Text(stringResource(R.string.todo_empty_subtitle), style = MaterialTheme.typography.bodyMedium)
             }
             return@Scaffold
         }
@@ -151,16 +152,16 @@ fun TodoListRoute(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(label = "All", selected = filter == TodoFilter.ALL) { filter = TodoFilter.ALL }
-                FilterChip(label = "Active", selected = filter == TodoFilter.ACTIVE) { filter = TodoFilter.ACTIVE }
-                FilterChip(label = "Completed", selected = filter == TodoFilter.COMPLETED) { filter = TodoFilter.COMPLETED }
+                FilterChip(label = stringResource(R.string.todo_filter_all), selected = filter == TodoFilter.ALL) { filter = TodoFilter.ALL }
+                FilterChip(label = stringResource(R.string.todo_filter_active), selected = filter == TodoFilter.ACTIVE) { filter = TodoFilter.ACTIVE }
+                FilterChip(label = stringResource(R.string.todo_filter_completed), selected = filter == TodoFilter.COMPLETED) { filter = TodoFilter.COMPLETED }
             }
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 when (filter) {
                     TodoFilter.ALL -> {
                         if (activeTodos.isNotEmpty()) {
-                            item { SectionHeader("To do", count = activeTodos.size) }
+                            item { SectionHeader(stringResource(R.string.todo_section_todo), count = activeTodos.size) }
                             items(activeTodos, key = { it.id }) { todo ->
                                 TodoRow(
                                     todo = todo,
@@ -249,14 +250,14 @@ private fun CompletedHeader(count: Int, expanded: Boolean, onToggle: () -> Unit)
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Completed ($count)",
+            text = stringResource(R.string.todo_section_completed) + " ($count)",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.weight(1f)
         )
         IconButton(onClick = onToggle) {
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand"
+                contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand)
             )
         }
     }
@@ -306,10 +307,10 @@ private fun TodoRow(
             )
         }
         IconButton(onClick = onClick) {
-            Text("Edit")
+            Text(stringResource(R.string.action_edit))
         }
         IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete")
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))
         }
     }
 }

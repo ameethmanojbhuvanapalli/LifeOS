@@ -102,6 +102,7 @@ class TodoListViewModel @Inject constructor(
             .distinctBy { it.field }
 
         val comparator = effectiveKeys
+            .asSequence()
             .map { key -> comparatorFor(key) }
             .reduce { acc, next -> acc.then(next) }
 
@@ -110,13 +111,13 @@ class TodoListViewModel @Inject constructor(
 
     private fun comparatorFor(key: TodoSortKey): Comparator<Todo> {
         return when (key.field) {
-            TodoSortField.Updated -> compareBy<Todo>(nullsLast()) { it.updatedAt }
+            TodoSortField.Updated -> compareBy<Todo, Long> { it.updatedAt }
                 .withDirection(key.direction)
 
-            TodoSortField.DueDate -> compareBy<Todo>(nullsLast()) { it.dueDate }
+            TodoSortField.DueDate -> compareBy<Todo, Long?>(nullsLast()) { it.dueDate }
                 .withDirection(key.direction)
 
-            TodoSortField.Priority -> compareBy<Todo> { priorityRank(it.priority) }
+            TodoSortField.Priority -> compareBy<Todo, Int> { priorityRank(it.priority) }
                 .withDirection(key.direction)
         }
     }

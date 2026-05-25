@@ -1,0 +1,33 @@
+package com.lifeos.presentation.screens
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun DashboardScreen(
+    onOpenTodos: () -> Unit
+) {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("LifeOS") }) }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+            Text("Dashboard")
+            Button(onClick = onOpenTodos, modifier = Modifier.padding(top = 12.dp)) {
+                Text("Open Todos")
+            }
+        }
+    }
+}

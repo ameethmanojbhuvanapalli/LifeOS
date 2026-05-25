@@ -1,40 +1,38 @@
 # LifeOS (Personal Tracker App)
 
-A modular, offline-first **personal tracker** app built with **Kotlin**, **MVVM + Clean Architecture**, **Room**, **Hilt**, and optional **cloud sync** (Firebase Firestore / custom backend).
+A modular, offline-first **personal tracker** app built with **Kotlin**, **MVVM + Clean Architecture**, **Room**, **Hilt**, **Jetpack Compose**, and **Firebase Firestore sync**.
 
 ## Tech Stack
 - **Language:** Kotlin
 - **Architecture:** MVVM + Clean Architecture
 - **Local DB:** Room (SQLite)
-- **Cloud Sync:** Firebase Firestore / Custom Backend (optional)
+- **Cloud Sync:** Firebase Firestore
 - **DI:** Hilt (Dagger)
 - **Navigation:** Jetpack Navigation Component
-- **UI:** Jetpack Compose / XML Views (configurable)
+- **UI:** Jetpack Compose
 
-## Folder Structure (target)
-This repository is scaffolded to match the Low-Level Design (LLD) structure:
+## Package
+Base package: `com.lifeos`
 
-```
-app/src/main/java/com/yourapp/lifeos/
-  core/
-  di/
-  data/
-  domain/
-  presentation/
-```
+## Module Layout
+The scaffold follows the LLD layers:
 
-> Note: The base package is set to `com.yourapp.lifeos` as a placeholder. You can rename it later.
+- `core/` — base classes, utils, constants, navigation helpers, Result wrapper
+- `di/` — Hilt modules
+- `data/` — Room + Firestore + repositories + mappers
+- `domain/` — models + use cases + repository contracts
+- `presentation/` — Compose UI + ViewModels + UI state
 
 ## Getting Started
-1. Open the project in Android Studio.
-2. Sync Gradle.
-3. Run the `app` configuration.
+1. Open in Android Studio (Hedgehog+ recommended).
+2. Add your `google-services.json` under `app/`.
+3. Run `:app`.
 
 ## Roadmap
 - Phase 1: Foundation (Hilt, Room, navigation)
 - Phase 2: Core modules (Todo, Finance, Dashboard)
 - Phase 3: Advanced modules (Tracker/Habits, Analytics)
-- Phase 4: Sync & Polish (Firestore/custom backend)
+- Phase 4: Sync & Polish (Firestore sync, conflict resolution, backups)
 
 ## License
 MIT

@@ -16,39 +16,33 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.lifeos.core.util.DateTimeUtils
 import com.lifeos.domain.model.Priority
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddEditTodoRoute(
+fun AddEditTodoScreen(
+    state: AddEditTodoUiState,
     onBack: () -> Unit,
-    viewModel: AddEditTodoViewModel = hiltViewModel()
+    onTitleChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onPriorityChange: (Priority) -> Unit,
+    onDueDateChange: (Long?) -> Unit,
+    onCompletedChange: (Boolean) -> Unit,
+    onSave: () -> Unit
 ) {
-    val state = viewModel.uiState.value
-    val context = LocalContext.current
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(if (state.isEdit) "Edit Todo" else "Add Todo") },
-                navigationIcon = {
-                    TextButton(onClick = onBack) { Text("Back") }
-                }
+                navigationIcon = { TextButton(onClick = onBack) { Text("Back") } }
             )
         }
     ) { padding ->
@@ -59,37 +53,44 @@ fun AddEditTodoRoute(
         ) {
             OutlinedTextField(
                 value = state.title,
-                onValueChange = viewModel::setTitle,
+                onValueChange = onTitleChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Title*") },
-                singleLine = true
+                singleLine = true,
+                enabled = !state.isSaving
             )
 
             Spacer(Modifier.padding(8.dp))
 
             OutlinedTextField(
                 value = state.description,
-                onValueChange = viewModel::setDescription,
+                onValueChange = onDescriptionChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Description") }
+                label = { Text("Description") },
+                enabled = !state.isSaving
             )
 
             Spacer(Modifier.padding(8.dp))
 
-            PriorityPicker(priority = state.priority, onPriority = viewModel::setPriority)
+            PriorityPicker(priority = state.priority, onPriority = onPriorityChange)
 
             Spacer(Modifier.padding(8.dp))
 
             DueDatePicker(
                 dueDateMillis = state.dueDateMillis,
-                onPick = viewModel::setDueDate,
-                onClear = { viewModel.setDueDate(null) }
+                enabled = !state.isSaving,
+                onPick = { onDueDateChange(it) },
+                onClear = { onDueDateChange(null) }
             )
 
             Spacer(Modifier.padding(8.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = state.isCompleted, onCheckedChange = viewModel::setCompleted)
+                Checkbox(
+                    checked = state.isCompleted,
+                    onCheckedChange = onCompletedChange,
+                    enabled = !state.isSaving
+                )
                 Text("Completed")
             }
 
@@ -101,7 +102,7 @@ fun AddEditTodoRoute(
             Spacer(Modifier.padding(12.dp))
 
             Button(
-                onClick = { viewModel.save(onSaved = onBack) },
+                onClick = onSave,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isSaving
             ) {
@@ -113,12 +114,12 @@ fun AddEditTodoRoute(
 
 @Composable
 private fun PriorityPicker(priority: Priority, onPriority: (Priority) -> Unit) {
-    // Simple row buttons (can be upgraded to segmented buttons later)
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text("Priority:")
         Spacer(Modifier.padding(6.dp))
         Priority.values().forEach { p ->
             TextButton(onClick = { onPriority(p) }) {
+                // Brackets indicate the selected item (MEDIUM is selected by default)
                 Text(if (p == priority) "[${p.name}]" else p.name)
             }
         }
@@ -128,6 +129,7 @@ private fun PriorityPicker(priority: Priority, onPriority: (Priority) -> Unit) {
 @Composable
 private fun DueDatePicker(
     dueDateMillis: Long?,
+    enabled: Boolean,
     onPick: (Long) -> Unit,
     onClear: () -> Unit
 ) {
@@ -138,6 +140,7 @@ private fun DueDatePicker(
         Text(label)
         Spacer(Modifier.padding(6.dp))
         TextButton(
+            enabled = enabled,
             onClick = {
                 val cal = Calendar.getInstance()
                 val dialog = DatePickerDialog(
@@ -155,7 +158,7 @@ private fun DueDatePicker(
             }
         ) { Text("Pick") }
         if (dueDateMillis != null) {
-            TextButton(onClick = onClear) { Text("Clear") }
+            TextButton(enabled = enabled, onClick = onClear) { Text("Clear") }
         }
     }
 }

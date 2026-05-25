@@ -43,7 +43,7 @@ class TodoListViewModel @Inject constructor(
                 else -> state.sortKeys.mapIndexed { idx, key ->
                     if (idx != existingIndex) key else key.copy(direction = key.direction.flip())
                 }
-            }.normalizeDefault()
+            }
 
             state.copy(sortKeys = newKeys)
         }
@@ -51,12 +51,13 @@ class TodoListViewModel @Inject constructor(
 
     fun removeSortField(field: TodoSortField) {
         _uiState.update { state ->
-            state.copy(sortKeys = state.sortKeys.filterNot { it.field == field }.normalizeDefault())
+            state.copy(sortKeys = state.sortKeys.filterNot { it.field == field })
         }
     }
 
     fun clearSort() {
-        _uiState.update { it.copy(sortKeys = listOf(TodoSortKey.Updated)) }
+        // User explicitly wants no sort keys selected.
+        _uiState.update { it.copy(sortKeys = emptyList()) }
     }
 
     fun toggle(todo: Todo) {
@@ -89,10 +90,17 @@ class TodoListViewModel @Inject constructor(
     }
 
     private fun sortTodos(list: List<Todo>, keys: List<TodoSortKey>): List<Todo> {
-        val effectiveKeys = (keys.normalizeDefault() + TodoSortKey.Updated)
-            .distinctBy { it.field }
+        val effectiveKeys = if (keys.isEmpty()) {
+            // Fall back for deterministic ordering when user cleared all keys.
+            TodoListUiState.defaultSortKeys
+        } else {
+            keys
+        }
 
-        val comparator = effectiveKeys
+        // Always apply stable tie-breaker at end.
+        val stableKeys = (effectiveKeys + TodoSortKey.Updated).distinctBy { it.field }
+
+        val comparator = stableKeys
             .asSequence()
             .map(::comparatorFor)
             .reduce { acc, next -> acc.then(next) }
@@ -114,7 +122,6 @@ class TodoListViewModel @Inject constructor(
     }
 
     private fun priorityRank(priority: Priority): Int {
-        // Explicit ranks (avoid fragile ordinal).
         return when (priority) {
             Priority.HIGH -> 3
             Priority.MEDIUM -> 2
@@ -132,7 +139,3 @@ class TodoListViewModel @Inject constructor(
 }
 
 private fun SortDirection.flip(): SortDirection = if (this == SortDirection.ASC) SortDirection.DESC else SortDirection.ASC
-
-private fun List<TodoSortKey>.normalizeDefault(): List<TodoSortKey> {
-    return if (isEmpty()) listOf(TodoSortKey.Updated) else this
-}

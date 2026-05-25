@@ -7,9 +7,17 @@ data class TodoListUiState(
     val isLoading: Boolean = true,
     val todos: List<Todo> = emptyList(),
     val errorMessage: String? = null,
-    val sortKeys: List<TodoSortKey> = listOf(TodoSortKey.Updated)
+    /**
+     * Sort chain in ORDER BY order. Can be empty when the user hits "Clear".
+     * Sorting will then fall back to [defaultSortKeys] at runtime.
+     */
+    val sortKeys: List<TodoSortKey> = defaultSortKeys
 ) {
     val isEmpty: Boolean get() = !isLoading && todos.isEmpty() && errorMessage == null
+
+    companion object {
+        val defaultSortKeys: List<TodoSortKey> = listOf(TodoSortKey.Updated)
+    }
 }
 
 /** Sort direction for a key. */

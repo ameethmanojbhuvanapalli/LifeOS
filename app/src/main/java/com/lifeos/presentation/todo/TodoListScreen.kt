@@ -141,7 +141,6 @@ fun TodoListRoute(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Filter chips
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -281,7 +280,7 @@ private fun SortMenuItem(
         onClick = { onToggleField(field) }
     )
 
-    // long-press to remove from the chain (otherwise click toggles direction)
+    // Note: removal UI can be added later (e.g., trailing icon). For now: Clear resets everything.
 }
 
 @Composable

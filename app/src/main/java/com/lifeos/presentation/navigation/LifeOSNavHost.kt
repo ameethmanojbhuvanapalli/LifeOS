@@ -10,7 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lifeos.core.navigation.NavDestinations
-import com.lifeos.presentation.screens.DashboardScreen
+import com.lifeos.presentation.dashboard.DashboardScreen
 import com.lifeos.presentation.todo.AddEditTodoRoute
 import com.lifeos.presentation.todo.TodoListRoute
 

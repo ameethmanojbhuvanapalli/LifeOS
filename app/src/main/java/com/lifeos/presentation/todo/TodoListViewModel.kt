@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class TodoListViewModel @Inject constructor(
@@ -41,25 +41,25 @@ class TodoListViewModel @Inject constructor(
             val existingIndex = state.sortKeys.indexOfFirst { it.field == field }
 
             val newKeys = when {
+                // Not in the list: add it (tap 1)
                 existingIndex == -1 -> state.sortKeys + defaultKeyFor(field)
-                else -> state.sortKeys.mapIndexed { idx, key ->
-                    if (idx != existingIndex) key else key.copy(direction = key.direction.flip())
+
+                // In the list: check current direction
+                state.sortKeys[existingIndex].direction == SortDirection.ASC -> {
+                    // Tap 2: toggle to DESC
+                    state.sortKeys.mapIndexed { idx, key ->
+                        if (idx != existingIndex) key else key.copy(direction = SortDirection.DESC)
+                    }
+                }
+
+                else -> {
+                    // Tap 3: remove it (direction is DESC, so next tap removes)
+                    state.sortKeys.filterIndexed { idx, _ -> idx != existingIndex }
                 }
             }
 
             state.copy(sortKeys = newKeys)
         }
-    }
-
-    fun removeSortField(field: TodoSortField) {
-        _uiState.update { state ->
-            state.copy(sortKeys = state.sortKeys.filterNot { it.field == field })
-        }
-    }
-
-    fun clearSort() {
-        // User explicitly wants no sort keys selected.
-        _uiState.update { it.copy(sortKeys = emptyList()) }
     }
 
     fun toggle(todo: Todo) {
@@ -95,13 +95,11 @@ class TodoListViewModel @Inject constructor(
 
     private fun sortTodos(list: List<Todo>, keys: List<TodoSortKey>): List<Todo> {
         val effectiveKeys = if (keys.isEmpty()) {
-            // Fall back for deterministic ordering when user cleared all keys.
             TodoListUiState.defaultSortKeys
         } else {
             keys
         }
 
-        // Always apply stable tie-breaker at end.
         val stableKeys = (effectiveKeys + TodoSortKey.Updated).distinctBy { it.field }
 
         val comparator = stableKeys

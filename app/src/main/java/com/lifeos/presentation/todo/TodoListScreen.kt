@@ -1,6 +1,5 @@
 package com.lifeos.presentation.todo
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -108,9 +107,7 @@ fun TodoListRoute(
                         expanded = sortMenuExpanded,
                         onDismiss = { sortMenuExpanded = false },
                         sortKeys = state.sortKeys,
-                        onToggleField = viewModel::toggleSortField,
-                        onRemoveField = viewModel::removeSortField,
-                        onClear = viewModel::clearSort
+                        onToggleField = viewModel::toggleSortField
                     )
                 }
             )
@@ -221,39 +218,26 @@ private fun SortMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
     sortKeys: List<TodoSortKey>,
-    onToggleField: (TodoSortField) -> Unit,
-    onRemoveField: (TodoSortField) -> Unit,
-    onClear: () -> Unit
+    onToggleField: (TodoSortField) -> Unit
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         SortMenuItem(
             title = stringResource(R.string.todo_sort_due_date),
             field = TodoSortField.DueDate,
             sortKeys = sortKeys,
-            onToggleField = onToggleField,
-            onRemoveField = onRemoveField
+            onToggleField = onToggleField
         )
         SortMenuItem(
             title = stringResource(R.string.todo_sort_priority),
             field = TodoSortField.Priority,
             sortKeys = sortKeys,
-            onToggleField = onToggleField,
-            onRemoveField = onRemoveField
+            onToggleField = onToggleField
         )
         SortMenuItem(
             title = stringResource(R.string.todo_sort_updated),
             field = TodoSortField.Updated,
             sortKeys = sortKeys,
-            onToggleField = onToggleField,
-            onRemoveField = onRemoveField
-        )
-
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.action_clear)) },
-            onClick = {
-                onClear()
-                onDismiss()
-            }
+            onToggleField = onToggleField
         )
     }
 }
@@ -263,8 +247,7 @@ private fun SortMenuItem(
     title: String,
     field: TodoSortField,
     sortKeys: List<TodoSortKey>,
-    onToggleField: (TodoSortField) -> Unit,
-    onRemoveField: (TodoSortField) -> Unit
+    onToggleField: (TodoSortField) -> Unit
 ) {
     val index = sortKeys.indexOfFirst { it.field == field }
     val order = if (index >= 0) "${index + 1}" else null
@@ -280,8 +263,6 @@ private fun SortMenuItem(
         text = { Text(title + suffix) },
         onClick = { onToggleField(field) }
     )
-
-    // Note: removal UI can be added later (e.g., trailing icon). For now: Clear resets everything.
 }
 
 @Composable
@@ -327,7 +308,6 @@ private fun CompletedHeader(count: Int, expanded: Boolean, onToggle: () -> Unit)
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TodoRow(
     todo: Todo,

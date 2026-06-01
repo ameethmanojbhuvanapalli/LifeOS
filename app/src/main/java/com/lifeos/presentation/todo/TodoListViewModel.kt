@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 @HiltViewModel
 class TodoListViewModel @Inject constructor(
@@ -74,15 +76,17 @@ class TodoListViewModel @Inject constructor(
 
     private fun observeTodos() {
         viewModelScope.launch {
-            getTodosUseCase()
+            combine(
+                getTodosUseCase(),
+                _uiState.map { it.sortKeys }
+            ) { list, keys -> sortTodos(list, keys) }
                 .catch { e ->
                     _uiState.update {
                         it.copy(isLoading = false, errorMessage = e.message ?: "Unknown error")
                     }
                 }
-                .collectLatest { list ->
+                .collectLatest { sorted ->
                     _uiState.update { state ->
-                        val sorted = sortTodos(list, state.sortKeys)
                         state.copy(isLoading = false, todos = sorted, errorMessage = null)
                     }
                 }

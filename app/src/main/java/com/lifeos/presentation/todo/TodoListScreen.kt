@@ -1,5 +1,6 @@
 package com.lifeos.presentation.todo
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -326,6 +327,7 @@ private fun CompletedHeader(count: Int, expanded: Boolean, onToggle: () -> Unit)
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TodoRow(
     todo: Todo,

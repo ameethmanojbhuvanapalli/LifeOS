@@ -12,8 +12,8 @@ data class TrackerEntity(
     val name: String,
     val description: String?,
     val type: TrackerType,
-    val targetValue: Int?,
-    val unit: String?,
+    val targetValue: Int? = null,
+    val unit: String? = null,
     val frequency: RepeatFrequency,
     val createdAt: Long,
     val syncStatus: SyncStatus

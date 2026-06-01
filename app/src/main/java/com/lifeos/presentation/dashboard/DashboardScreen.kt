@@ -1,4 +1,4 @@
-package com.lifeos.presentation.screens
+package com.lifeos.presentation.dashboard
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

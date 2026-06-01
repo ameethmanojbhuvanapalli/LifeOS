@@ -1,4 +1,10 @@
-# Default ignored files
-/shelf/
-/.idea/
+*.iml
+.gradle
 /local.properties
+/.idea/
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+**/build/

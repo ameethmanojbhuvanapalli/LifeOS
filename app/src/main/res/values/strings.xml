@@ -1,4 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LifeOS</string>
+
+    <!-- Navigation / labels -->
+    <string name="nav_home">Home</string>
+    <string name="nav_todos">Todos</string>
+
+    <!-- Common actions -->
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_back">Back</string>
+    <string name="action_save">Save</string>
+    <string name="action_saving">Saving…</string>
+    <string name="action_sort">Sort</string>
+    <string name="action_pick">Pick</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_expand">Expand</string>
+    <string name="action_collapse">Collapse</string>
+
+    <!-- Todos -->
+    <string name="title_todos">Todos</string>
+    <string name="title_add_todo">Add Todo</string>
+    <string name="title_edit_todo">Edit Todo</string>
+
+    <string name="todo_title_label">Title*</string>
+    <string name="todo_description_label">Description</string>
+    <string name="todo_completed_label">Completed</string>
+    <string name="todo_priority_label">Priority:</string>
+
+    <string name="todo_empty_title">No todos yet</string>
+    <string name="todo_empty_subtitle">Tap + to add your first task</string>
+
+    <string name="todo_delete_dialog_title">Delete todo?</string>
+    <string name="todo_delete_dialog_message">This action cannot be undone.</string>
+
+    <string name="todo_sort_updated">Updated</string>
+    <string name="todo_sort_due_date">Due date</string>
+    <string name="todo_sort_priority">Priority</string>
+
+    <string name="todo_filter_all">All</string>
+    <string name="todo_filter_active">Active</string>
+    <string name="todo_filter_completed">Completed</string>
+
+    <string name="todo_section_todo">To do</string>
+    <string name="todo_section_completed">Completed</string>
+
+    <string name="todo_due_none">No due date</string>
+    <string name="todo_due_prefix">Due: %1$s</string>
+
+    <string name="todo_error_title_required">Title is required</string>
+    <string name="todo_error_save_failed">Failed to save</string>
+
 </resources>

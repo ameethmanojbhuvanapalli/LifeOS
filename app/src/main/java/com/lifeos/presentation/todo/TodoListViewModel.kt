@@ -41,19 +41,18 @@ class TodoListViewModel @Inject constructor(
             val existingIndex = state.sortKeys.indexOfFirst { it.field == field }
 
             val newKeys = when {
-                // Not in the list: add it (tap 1)
-                existingIndex == -1 -> state.sortKeys + defaultKeyFor(field)
+                // Tap 1: Not in the list → add it (start with ASC)
+                existingIndex == -1 -> state.sortKeys + TodoSortKey(field, SortDirection.ASC)
 
-                // In the list: check current direction
+                // Tap 2: In the list with ASC → toggle to DESC
                 state.sortKeys[existingIndex].direction == SortDirection.ASC -> {
-                    // Tap 2: toggle to DESC
                     state.sortKeys.mapIndexed { idx, key ->
                         if (idx != existingIndex) key else key.copy(direction = SortDirection.DESC)
                     }
                 }
 
+                // Tap 3: In the list with DESC → remove it
                 else -> {
-                    // Tap 3: remove it (direction is DESC, so next tap removes)
                     state.sortKeys.filterIndexed { idx, _ -> idx != existingIndex }
                 }
             }
@@ -130,14 +129,4 @@ class TodoListViewModel @Inject constructor(
             Priority.LOW -> 1
         }
     }
-
-    private fun defaultKeyFor(field: TodoSortField): TodoSortKey {
-        return when (field) {
-            TodoSortField.Updated -> TodoSortKey.Updated
-            TodoSortField.DueDate -> TodoSortKey.DueDate
-            TodoSortField.Priority -> TodoSortKey.Priority
-        }
-    }
 }
-
-private fun SortDirection.flip(): SortDirection = if (this == SortDirection.ASC) SortDirection.DESC else SortDirection.ASC
